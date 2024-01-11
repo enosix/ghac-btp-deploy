@@ -1,0 +1,54 @@
+name: Test and Tag
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Tag Name'
+        required: true
+        default: 'dev'
+        type: choice
+        options:
+          - 'dev'
+          - 'stable'
+
+permissions:
+  contents: write
+  packages: read
+
+jobs:
+  test-and-tag:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+#        - name: Test Action
+#          uses: ./
+#          with:
+#              package_id:
+#              project_id:
+#              version:
+#              path:
+#              alt_packages:
+#              jira_id:
+#              variables:
+#              release:
+      - name: Create tag
+        uses: actions/github-script@v7
+        with:
+          script: |
+            try {
+              await github.rest.git.updateRef({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                ref: 'tags/${{ github.event.inputs.tag }}',
+                sha: context.sha,
+              })
+            } catch (err) {
+              console.log(err)
+            
+              await github.rest.git.createRef({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                ref: 'refs/tags/${{ github.event.inputs.tag }}',
+                sha: context.sha,
+              })
+            }

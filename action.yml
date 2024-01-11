@@ -1,0 +1,61 @@
+name: 'BTP Deploy'
+description: |
+  Deploy to BTP.
+inputs:
+  api:
+    description: 'BTP Api URL'
+    default: 'https://api.cf.us10.hana.ondemand.com'
+  username:
+    description: 'Username for API authentication'
+    required: true
+  password:
+    description: 'Password for API authentication'
+    required: true
+  org:
+    description: 'Target org'
+    required: false
+  space:
+    description: 'Target space'
+    required: false
+  manifest:
+    description: 'Path to manifest file'
+    required: true
+  vars:
+    description: 'Manifest variables'
+    required: false
+    default: ''
+  docker_password:
+    description: 'Docker password'
+    required: false
+    default: ''
+
+outputs:
+  version:
+    description: "Image Version"
+    value: ${{ steps.release.outputs.release_number }}
+
+runs:
+  using: "composite"
+  steps:
+  - name: Login to BTP
+    shell: bash
+    run: |
+      cf version
+      cf api "${{ inputs.api }}"
+      cf auth
+      cf target -o "${{ inputs.org }}" -s "${{ inputs.space }}"
+    env:
+      CF_USERNAME: ${{ inputs.username }}
+      CF_PASSWORD: ${{ inputs.password }}
+
+  - name: Push manifest
+    shell: bash
+    run: |
+      cat <<EOF_91aca66dc10f4085b860752b4f3f8399 > vars.yaml
+      ${{ inputs.vars }}
+      EOF_91aca66dc10f4085b860752b4f3f8399
+      
+      cf push -f "{{ inputs.manifest}} " --vars-file "vars.yaml"
+    env:
+      CF_DOCKER_PASSWORD: ${{ inputs.docker_password }}
+
