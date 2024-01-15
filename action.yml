@@ -19,7 +19,8 @@ inputs:
     required: false
   manifest:
     description: 'Path to manifest file'
-    required: true
+    required: false
+    default: ''
   vars:
     description: 'Manifest variables'
     required: false
@@ -28,6 +29,14 @@ inputs:
     description: 'Docker password'
     required: false
     default: ''
+  command:
+    description: 'Command to run'
+    required: false
+    default: ''
+  cli_version:
+    description: 'CF CLI version'
+    required: false
+    default: 'v7'
 
 outputs:
   version:
@@ -37,25 +46,39 @@ outputs:
 runs:
   using: "composite"
   steps:
+  - name: Install CF CLI
+    shell: bash
+    run: |
+      curl -L "https://packages.cloudfoundry.org/stable?release=linux64-binary&version=${{ inputs.cli_version }}&source=github" | tar -zx
+      chmod +x cf*
+      ./cf version
   - name: Login to BTP
     shell: bash
     run: |
-      cf version
-      cf api "${{ inputs.api }}"
-      cf auth
-      cf target -o "${{ inputs.org }}" -s "${{ inputs.space }}"
+      ./cf api "${{ inputs.api }}"
+      ./cf auth
+      ./cf target -o "${{ inputs.org }}" -s "${{ inputs.space }}"
     env:
       CF_USERNAME: ${{ inputs.username }}
       CF_PASSWORD: ${{ inputs.password }}
 
   - name: Push manifest
+    if: inputs.manifest != ''
     shell: bash
     run: |
       cat <<EOF_91aca66dc10f4085b860752b4f3f8399 > vars.yaml
       ${{ inputs.vars }}
       EOF_91aca66dc10f4085b860752b4f3f8399
       
-      cf push -f "{{ inputs.manifest}} " --vars-file "vars.yaml"
+      ./cf push -f "${{ inputs.manifest }} " --vars-file "vars.yaml"
+    env:
+      CF_DOCKER_PASSWORD: ${{ inputs.docker_password }}
+
+  - name: Run command
+    if: inputs.command != ''
+    shell: bash
+    run: |
+      ./cf ${{ inputs.command }}
     env:
       CF_DOCKER_PASSWORD: ${{ inputs.docker_password }}
 
