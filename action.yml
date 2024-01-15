@@ -78,7 +78,8 @@ runs:
     if: inputs.command != ''
     shell: bash
     run: |
-      ./cf ${{ inputs.command }}
+      PATH=$PATH:$(pwd)
+      ${{ inputs.command }}
     env:
       CF_DOCKER_PASSWORD: ${{ inputs.docker_password }}
 
