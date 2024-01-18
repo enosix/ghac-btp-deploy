@@ -70,7 +70,7 @@ runs:
       ${{ inputs.vars }}
       EOF_91aca66dc10f4085b860752b4f3f8399
       
-      ./cf push -f "${{ inputs.manifest }} " --vars-file "vars.yaml"
+      ./cf push -f "${{ inputs.manifest }}" --vars-file "vars.yaml"
     env:
       CF_DOCKER_PASSWORD: ${{ inputs.docker_password }}
 
