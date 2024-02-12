@@ -38,11 +38,6 @@ inputs:
     required: false
     default: 'v7'
 
-outputs:
-  version:
-    description: "Image Version"
-    value: ${{ steps.release.outputs.release_number }}
-
 runs:
   using: "composite"
   steps:
