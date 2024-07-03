@@ -24,13 +24,20 @@ jobs:
   test-and-tag:
     runs-on: ubuntu-latest
     steps:
+      - name: Get Secrets
+        uses: bitwarden/sm-action@v2
+        with:
+          access_token: ${{ secrets.BW_ACCESS_TOKEN }}
+          secrets: |
+            cef670b6-a372-4ee7-8d86-b1a000f56a3c > CF_USERNAME
+            6db2a260-106e-4a5a-b612-b1a000f5a374 > CF_PASSWORD
       - uses: actions/checkout@v4
       - name: Test Action
         uses: ./
         with:
           api: ${{ env.BTP_URL }}
-          username: ${{ secrets.CF_USERNAME }}
-          password: ${{ secrets.CF_PASSWORD }}
+          username: ${{ env.CF_USERNAME }}
+          password: ${{ env.CF_PASSWORD }}
           org: ${{ env.CF_ORG }}
           space: ${{ env.CF_SPACE }}
           command: |
