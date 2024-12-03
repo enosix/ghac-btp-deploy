@@ -44,7 +44,7 @@ runs:
   - name: Install CF CLI
     shell: bash
     run: |
-      tar -zxf "${{ github.action_path }}/bin/${{ inputs.cli_version }}.tgz"
+      tar -zxf "${GITHUB_ACTION_PATH}/bin/${{ inputs.cli_version }}.tgz"
       chmod +x cf*
       ./cf version
   - name: Login to BTP
