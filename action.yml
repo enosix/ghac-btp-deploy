@@ -44,7 +44,7 @@ runs:
   - name: Install CF CLI
     shell: bash
     run: |
-      curl -L "https://packages.cloudfoundry.org/stable?release=linux64-binary&version=${{ inputs.cli_version }}&source=github" | tar -zx
+      tar -zxf "${{ github.action_path }}/bin/${{ inputs.cli_version }}.tgz"
       chmod +x cf*
       ./cf version
   - name: Login to BTP
