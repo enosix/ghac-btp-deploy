@@ -1,5 +1,9 @@
 name: Test and Tag
+
 on:
+  pull_request:
+    branches:
+      - main
   workflow_dispatch:
     inputs:
       tag:
@@ -55,6 +59,7 @@ jobs:
           command: cf delete ghac-btp-deploy-pr -f -r
           
       - name: Create tag
+        if: github.event_name != 'pull_request'
         uses: actions/github-script@v7
         with:
           script: |
