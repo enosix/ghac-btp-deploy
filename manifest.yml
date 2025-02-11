@@ -3,4 +3,4 @@
 applications:
   - name: ghac-btp-deploy-pr
     docker:
-      image: node:latest
+      image: nginx:alpine
