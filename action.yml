@@ -92,7 +92,7 @@ runs:
     if: always() && github.event_name == 'pull_request'
     with:
       message: |
-        Your PR has been deployed to ${{ steps.cfdeploy.outputs.cf_app_url }}
+        Your PR has been deployed to 'https://${{ steps.cfdeploy.outputs.cf_app_url }}'
       message-failure: |
         Your PR failed to deploy. Please check the logs.
       refresh-message-position: true
