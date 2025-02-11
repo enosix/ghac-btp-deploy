@@ -3,7 +3,7 @@
 applications:
   - name: ghac-btp-deploy-pr
     memory: 32M
-    disk_quota: 512M
+    disk_quota: 64M
     health-check-type: port
     readiness-health-check-type: process
     port: 80
