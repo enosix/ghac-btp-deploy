@@ -31,8 +31,10 @@ jobs:
           secrets: |
             cef670b6-a372-4ee7-8d86-b1a000f56a3c > CF_USERNAME
             6db2a260-106e-4a5a-b612-b1a000f5a374 > CF_PASSWORD
+      
       - uses: actions/checkout@v4
-      - name: Test Action
+      
+      - name: Deploy to BTP
         uses: ./
         with:
           api: ${{ env.BTP_URL }}
@@ -40,8 +42,18 @@ jobs:
           password: ${{ env.CF_PASSWORD }}
           org: ${{ env.CF_ORG }}
           space: ${{ env.CF_SPACE }}
-          command: |
-            cf apps
+          manifest: 'manifest.yml'
+      
+      - name: Cleanup PR
+        uses: ./
+        with:
+          api: ${{ env.BTP_URL }}
+          username: ${{ env.CF_USERNAME }}
+          password: ${{ env.CF_PASSWORD }}
+          org: ${{ env.CF_ORG }}
+          space: ${{ env.CF_SPACE }}
+          command: cf delete ghac-btp-deploy-pr -f -r
+          
       - name: Create tag
         uses: actions/github-script@v7
         with:
@@ -55,7 +67,7 @@ jobs:
               })
             } catch (err) {
               console.log(err)
-            
+
               await github.rest.git.createRef({
                 owner: context.repo.owner,
                 repo: context.repo.repo,

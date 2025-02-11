@@ -57,6 +57,18 @@ runs:
       CF_USERNAME: ${{ inputs.username }}
       CF_PASSWORD: ${{ inputs.password }}
 
+  - name: Deploy to Cloud Foundry
+    shell: bash
+    id: cf-deploy
+    run: |
+      OUTPUT_FILE=$(mktemp)
+      # Run cf push and tee the output to both console and file
+      ./cf push -f "${{ inputs.manifest }}" --vars-file "vars.yaml" | tee ${OUTPUT_FILE}
+      # Extract the URL from the output and store it in an environment variable
+      APP_URL=$(grep -o 'routes:.*\(.\+\)' ${OUTPUT_FILE} | tail -1 | awk '{print $NF}')
+      echo "cf_app_url=${APP_URL}" >> $GITHUB_OUTPUT\
+      rm ${OUTPUT_FILE}
+
   - name: Push manifest
     if: inputs.manifest != ''
     shell: bash
@@ -77,4 +89,12 @@ runs:
       ${{ inputs.command }}
     env:
       CF_DOCKER_PASSWORD: ${{ inputs.docker_password }}
-
+      
+  - uses: mshick/add-pr-comment@v2
+    if: always() && github.event_name == 'pull_request'
+    with:
+      message: |
+        Your PR has been deployed to ${{ steps.profile.outputs.url }}
+      message-failure: |
+        Your PR failed to deploy. Please check the logs.
+      refresh-message-position: true

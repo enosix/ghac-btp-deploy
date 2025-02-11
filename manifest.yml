@@ -1,0 +1,6 @@
+---
+# This is a fake manifest for testing changes to this github action.
+applications:
+  - name: ghac-btp-deploy-pr
+    docker:
+      image: node:latest
