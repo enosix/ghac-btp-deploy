@@ -74,7 +74,7 @@ runs:
       # Extract the URL from the output and store it in an environment variable
       APP_URL=$(grep -o 'routes:.*\(.\+\)' ${OUTPUT_FILE} | tail -1 | awk '{print $NF}')
       
-      echo "cf_app_url=${APP_URL}" >> $GITHUB_OUTPUT\
+      echo "cf_app_url=${APP_URL}" >> $GITHUB_OUTPUT
       rm ${OUTPUT_FILE}
     env:
       CF_DOCKER_PASSWORD: ${{ inputs.docker_password }}
