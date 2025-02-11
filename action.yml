@@ -89,7 +89,7 @@ runs:
       CF_DOCKER_PASSWORD: ${{ inputs.docker_password }}
       
   - uses: mshick/add-pr-comment@v2
-    if: always() && github.event_name == 'pull_request'
+    if: always() && github.event_name == 'pull_request' && inputs.manifest != ''
     with:
       message: |
         Your PR has been deployed to 'https://${{ steps.cfdeploy.outputs.cf_app_url }}'
