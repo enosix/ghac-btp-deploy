@@ -47,6 +47,7 @@ runs:
       tar -zxf "${GITHUB_ACTION_PATH}/bin/${{ inputs.cli_version }}.tgz"
       chmod +x cf*
       ./cf version
+  
   - name: Login to BTP
     shell: bash
     run: |
@@ -58,26 +59,23 @@ runs:
       CF_PASSWORD: ${{ inputs.password }}
 
   - name: Deploy to Cloud Foundry
-    shell: bash
-    id: cf-deploy
-    run: |
-      OUTPUT_FILE=$(mktemp)
-      # Run cf push and tee the output to both console and file
-      ./cf push -f "${{ inputs.manifest }}" --vars-file "vars.yaml" | tee ${OUTPUT_FILE}
-      # Extract the URL from the output and store it in an environment variable
-      APP_URL=$(grep -o 'routes:.*\(.\+\)' ${OUTPUT_FILE} | tail -1 | awk '{print $NF}')
-      echo "cf_app_url=${APP_URL}" >> $GITHUB_OUTPUT\
-      rm ${OUTPUT_FILE}
-
-  - name: Push manifest
     if: inputs.manifest != ''
     shell: bash
+    id: cf-deploy
     run: |
       cat <<-EOF_91aca66dc10f4085b860752b4f3f8399 > vars.yaml
       ${{ inputs.vars }}
       EOF_91aca66dc10f4085b860752b4f3f8399
       
-      ./cf push -f "${{ inputs.manifest }}" --vars-file "vars.yaml"
+      OUTPUT_FILE=$(mktemp)
+      # Run cf push and tee the output to both console and file
+      ./cf push -f "${{ inputs.manifest }}" --vars-file "vars.yaml" | tee ${OUTPUT_FILE}
+      
+      # Extract the URL from the output and store it in an environment variable
+      APP_URL=$(grep -o 'routes:.*\(.\+\)' ${OUTPUT_FILE} | tail -1 | awk '{print $NF}')
+      
+      echo "cf_app_url=${APP_URL}" >> $GITHUB_OUTPUT\
+      rm ${OUTPUT_FILE}
     env:
       CF_DOCKER_PASSWORD: ${{ inputs.docker_password }}
 
