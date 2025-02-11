@@ -4,5 +4,8 @@ applications:
   - name: ghac-btp-deploy-pr
     memory: 32M
     disk_quota: 32M
+    health-check-type: port
+    readiness-health-check-type: process
+    port: 80
     docker:
-      image: node:latest
+      image: nginx:alpine
