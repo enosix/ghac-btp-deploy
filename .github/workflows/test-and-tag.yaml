@@ -20,11 +20,6 @@ env:
   CF_ORG: en06-dev-aws
   CF_SPACE: dev
 
-permissions:
-  contents: write
-  packages: read
-  pull-request: write
-
 jobs:
   test-and-tag:
     runs-on: ubuntu-latest
