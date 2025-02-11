@@ -61,7 +61,7 @@ runs:
   - name: Deploy to Cloud Foundry
     if: inputs.manifest != ''
     shell: bash
-    id: cf-deploy
+    id: cfdeploy
     run: |
       cat <<-EOF_91aca66dc10f4085b860752b4f3f8399 > vars.yaml
       ${{ inputs.vars }}
@@ -92,7 +92,7 @@ runs:
     if: always() && github.event_name == 'pull_request'
     with:
       message: |
-        Your PR has been deployed to ${{ steps.profile.outputs.url }}
+        Your PR has been deployed to ${{ steps.cfdeploy.outputs.cf_app_url }}
       message-failure: |
         Your PR failed to deploy. Please check the logs.
       refresh-message-position: true
