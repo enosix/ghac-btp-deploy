@@ -21,6 +21,9 @@ inputs:
     description: 'Path to manifest file'
     required: false
     default: ''
+  path:
+    description: 'Path to the app root directory'
+    default: '.'
   vars:
     description: 'Manifest variables'
     required: false
@@ -69,7 +72,7 @@ runs:
       
       OUTPUT_FILE=$(mktemp)
       # Run cf push and tee the output to both console and file
-      ./cf push -f "${{ inputs.manifest }}" --vars-file "vars.yaml" | tee ${OUTPUT_FILE}
+      ./cf push -f "${{ inputs.manifest }}" -p "${{ inputs.path }}" --vars-file "vars.yaml" | tee ${OUTPUT_FILE}
       
       # Extract the URL from the output and store it in an environment variable
       APP_URL=$(grep -o 'routes:.*\(.\+\)' ${OUTPUT_FILE} | tail -1 | awk '{print $NF}')
