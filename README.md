@@ -12,6 +12,7 @@ optionally run a specified command.
 - `org`: The target organization. This is optional.
 - `space`: The target space. This is optional.
 - `manifest`: The path to the manifest file. This is optional.
+- `path`: The path to the app root directory. This is optional.
 - `vars`: The manifest variables. This is optional.
 - `docker_password`: The Docker password. This is optional.
 - `command`: A command to run after deployment. This is optional.
