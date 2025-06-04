@@ -96,7 +96,7 @@ runs:
       CF_DOCKER_PASSWORD: ${{ inputs.docker_password }}
 
   - name: Add Success Message 
-    if: github.event_name == 'pull_request' && success()
+    if: github.event_name == 'pull_request' && inputs.manifest != '' && success()
     uses: actions/github-script@v7
     env:
       APP_URL: https://${{ steps.cfdeploy.outputs.cf_app_url }}
@@ -108,8 +108,9 @@ runs:
           repo: context.repo.repo,
           body: `🟢 Your PR has been deployed to [${process.env.APP_URL}](${process.env.APP_URL})`
         })
+        
   - name: Add Failure Message
-    if: github.event_name == 'pull_request' && failure()
+    if: github.event_name == 'pull_request' && inputs.manifest != '' && failure()
     uses: actions/github-script@v7
     with:
       script: |
