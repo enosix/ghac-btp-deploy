@@ -106,4 +106,4 @@ runs:
       message-failure: |
         Your PR failed to deploy. Please check the logs.
       refresh-message-position: true
-      repo-token: ${{ inputs.token }}
+      repo-token: ${{ inputs.token || github.token }}
