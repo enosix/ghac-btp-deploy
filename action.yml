@@ -40,9 +40,6 @@ inputs:
     description: 'CF CLI version'
     required: false
     default: 'v7'
-  token:
-    description: 'Github Token'
-    required: false
 
 runs:
   using: "composite"
@@ -97,13 +94,29 @@ runs:
       ${{ inputs.command }}
     env:
       CF_DOCKER_PASSWORD: ${{ inputs.docker_password }}
-      
-  - uses: mshick/add-pr-comment@v2
-    if: always() && github.event_name == 'pull_request' && inputs.manifest != ''
+
+  - name: Add Success Message 
+    if: github.event_name == 'pull_request' && inputs.manifest != '' && success()
+    uses: actions/github-script@v7
+    env:
+      APP_URL: https://${{ steps.cfdeploy.outputs.cf_app_url }}
     with:
-      message: |
-        Your PR has been deployed to 'https://${{ steps.cfdeploy.outputs.cf_app_url }}'
-      message-failure: |
-        Your PR failed to deploy. Please check the logs.
-      refresh-message-position: true
-      repo-token: ${{ inputs.token || github.token }}
+      script: |
+        github.rest.issues.createComment({
+          issue_number: context.issue.number,
+          owner: context.repo.owner,
+          repo: context.repo.repo,
+          body: `🟢 Your PR has been deployed to [${process.env.APP_URL}](${process.env.APP_URL})`
+        })
+        
+  - name: Add Failure Message
+    if: github.event_name == 'pull_request' && inputs.manifest != '' && failure()
+    uses: actions/github-script@v7
+    with:
+      script: |
+        github.rest.issues.createComment({
+          issue_number: context.issue.number,
+          owner: context.repo.owner,
+          repo: context.repo.repo,
+          body: `🔴 Your PR failed to deploy. Please check the logs.`
+        })
