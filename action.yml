@@ -40,6 +40,9 @@ inputs:
     description: 'CF CLI version'
     required: false
     default: 'v7'
+  token:
+    description: 'Github Token'
+    required: false
 
 runs:
   using: "composite"
@@ -103,3 +106,4 @@ runs:
       message-failure: |
         Your PR failed to deploy. Please check the logs.
       refresh-message-position: true
+      repo-token: ${{ inputs.token }}
