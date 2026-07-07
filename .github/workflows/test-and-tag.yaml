@@ -25,14 +25,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Get Secrets
-        uses: bitwarden/sm-action@f1de238fc00c738c56140796018be9084c2b5d21 # v2.1.0
+        uses: bitwarden/sm-action@27c0c9dcab679d7250dbab91227c85b49ffa5e0f # v3.0.0
         with:
           access_token: ${{ secrets.BW_ACCESS_TOKEN }}
           secrets: |
             cef670b6-a372-4ee7-8d86-b1a000f56a3c > CF_USERNAME
             6db2a260-106e-4a5a-b612-b1a000f5a374 > CF_PASSWORD
       
-      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
       
       - name: Deploy to BTP
         uses: ./
@@ -56,7 +56,7 @@ jobs:
           
       - name: Create tag
         if: github.event_name != 'pull_request'
-        uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7.1.0
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         with:
           script: |
             try {
