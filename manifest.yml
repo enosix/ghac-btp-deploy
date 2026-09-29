@@ -1,11 +1,10 @@
 ---
 # This is a fake manifest for testing changes to this github action.
 applications:
-  - name: ghac-btp-deploy-pr
+  - name: ghac-btp-deploy-pr-2
     memory: 32M
     disk_quota: 64M
     health-check-type: port
     readiness-health-check-type: process
     port: 80
-    docker:
-      image: nginx:alpine
+    buildpack: staticfile_buildpack
