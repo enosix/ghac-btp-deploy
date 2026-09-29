@@ -43,8 +43,7 @@ jobs:
           org: ${{ env.CF_ORG }}
           space: ${{ env.CF_SPACE }}
           manifest: 'manifest.yml'
-          suppress_comments: 'true'
-      
+          
       - name: Cleanup PR
         uses: ./
         with:
