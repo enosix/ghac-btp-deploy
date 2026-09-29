@@ -7,5 +7,4 @@ applications:
     health-check-type: port
     readiness-health-check-type: process
     port: 80
-    docker:
-      image: nginx:alpine
+    buildpack: staticfile_buildpack
