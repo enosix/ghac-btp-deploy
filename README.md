@@ -17,6 +17,7 @@ optionally run a specified command.
 - `docker_password`: The Docker password. This is optional.
 - `command`: A command to run after deployment. This is optional.
 - `cli_version`: The cloud foundry CLI version. Default is 'v7'.
+- `suppress_comments`: Set to `'true'` to skip the PR success/failure comment steps. Default is `'false'`.
 
 ## Usage
 
@@ -40,6 +41,7 @@ steps:
       command: |
         cf apps
       cli_version: 'v7'
+      suppress_comments: 'false'
 ```
 
 In the above example, replace `'my-org'`, `'my-space'`, `'path/to/manifest.yml'`, and `'VAR1=value1 VAR2=value2'` with 
