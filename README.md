@@ -2,7 +2,7 @@
 
 This GitHub action is designed to deploy a site to SAP BTP (Business Technology Platform). It provides a set of inputs
 for configuration and executes a series of steps to install the CloudFoundry CLI, login to BTP, push the manifest, and 
-optionally run a specified command.
+optionally run a Bash script.
 
 ## Inputs
 
@@ -15,7 +15,7 @@ optionally run a specified command.
 - `path`: The path to the app root directory. This is optional.
 - `vars`: The manifest variables. This is optional.
 - `docker_password`: The Docker password. This is optional.
-- `command`: A command to run after deployment. This is optional.
+- `command`: A Bash script to run after deployment. Supports multiple lines, quoting, environment variables, and pipelines. This is optional.
 - `cli_version`: The cloud foundry CLI version. Default is 'v7'.
 - `suppress_comments`: Set to `'true'` to skip the PR deployment comment step. Default is `'false'`.
 
@@ -45,6 +45,8 @@ steps:
       docker_password: ${{ secrets.DOCKER_PASSWORD }}
       command: |
         cf apps
+        cf set-env my-app ALLOWED_HOSTS 'example.com; another.example.com'
+        cf restart my-app
       cli_version: 'v7'
       suppress_comments: 'false'
 ```
@@ -53,5 +55,8 @@ In the above example, replace `'my-org'`, `'my-space'`, `'path/to/manifest.yml'`
 your actual organization, space, manifest file path, and variables respectively. Also, make sure to store your BTP and 
 Docker passwords as secrets in your GitHub repository.
 
-The `command` input is optional. If provided, the command will be executed after the deployment. In this example, 
-`cf apps` is used to list all the apps in the target space after the deployment.
+The `command` input is optional. If provided, it runs as a Bash script after deployment (or after login if no manifest is
+provided), with the CF CLI on `PATH`. It uses `-e -o pipefail`, so a failed command or pipeline fails the action.
+In this example, the script lists apps, sets an environment variable containing spaces and a semicolon, and restarts the app.
+Only pass trusted scripts; pass dynamic or untrusted values through environment variables and quote their expansions
+inside the script rather than interpolating them into the script with GitHub expressions.
