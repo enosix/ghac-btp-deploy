@@ -111,7 +111,7 @@ runs:
       script: |
         const marker = `<!-- btp-deploy:${process.env.MANIFEST} -->`;
         const message = process.env.DEPLOYMENT_FAILED === 'true'
-          ? `🔴 Your PR failed to deploy using manifest \`${process.env.MANIFEST}\`. Please check the logs: [Actions run logs](${process.env.RUN_URL}).`
+          ? `🔴 Your PR failed to deploy using manifest \`${process.env.MANIFEST}\`. Please check [this action's run logs](${process.env.RUN_URL}).`
           : `🟢 Your PR has been deployed using manifest \`${process.env.MANIFEST}\` to [${process.env.APP_URL}](${process.env.APP_URL})`;
         const body = `${message}\n\n${marker}`;
 
