@@ -43,6 +43,18 @@ jobs:
           org: ${{ env.CF_ORG }}
           space: ${{ env.CF_SPACE }}
           manifest: 'manifest.yml'
+
+      - name: Test deployment failure comment
+        if: github.event_name == 'pull_request'
+        continue-on-error: true
+        uses: ./
+        with:
+          api: ${{ env.BTP_URL }}
+          username: ${{ env.CF_USERNAME }}
+          password: ${{ env.CF_PASSWORD }}
+          org: ${{ env.CF_ORG }}
+          space: ${{ env.CF_SPACE }}
+          manifest: 'nonexistent-manifest.yml'
           
       - name: Cleanup PR
         uses: ./
