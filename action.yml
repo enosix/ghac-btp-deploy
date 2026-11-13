@@ -105,7 +105,7 @@ runs:
     env:
       APP_URL: https://${{ steps.cfdeploy.outputs.cf_app_url }}
       MANIFEST: ${{ inputs.manifest }}
-      DEPLOYMENT_FAILED: ${{ job.status == 'failure' }}
+      DEPLOYMENT_FAILED: ${{ steps.cfdeploy.outcome == 'failure' || job.status == 'failure' }}
     with:
       script: |
         const marker = `<!-- btp-deploy:${process.env.MANIFEST} -->`;
