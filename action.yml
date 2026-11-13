@@ -51,19 +51,24 @@ runs:
   - name: Install CF CLI
     shell: bash
     run: |
-      tar -zxf "${GITHUB_ACTION_PATH}/bin/${{ inputs.cli_version }}.tgz"
+      tar -zxf "${GITHUB_ACTION_PATH}/bin/${INPUTS_CLI_VERSION}.tgz"
       chmod +x cf*
       ./cf version
+    env:
+      INPUTS_CLI_VERSION: ${{ inputs.cli_version }}
   
   - name: Login to BTP
     shell: bash
     run: |
-      ./cf api "${{ inputs.api }}"
+      ./cf api "${INPUTS_API}"
       ./cf auth
-      ./cf target -o "${{ inputs.org }}" -s "${{ inputs.space }}"
+      ./cf target -o "${INPUTS_ORG}" -s "${INPUTS_SPACE}"
     env:
       CF_USERNAME: ${{ inputs.username }}
       CF_PASSWORD: ${{ inputs.password }}
+      INPUTS_API: ${{ inputs.api }}
+      INPUTS_ORG: ${{ inputs.org }}
+      INPUTS_SPACE: ${{ inputs.space }}
 
   - name: Deploy to Cloud Foundry
     if: inputs.manifest != ''
@@ -71,15 +76,15 @@ runs:
     id: cfdeploy
     run: |
       cat <<-EOF_91aca66dc10f4085b860752b4f3f8399 > vars.yaml
-      ${{ inputs.vars }}
+      ${INPUTS_VARS}
       EOF_91aca66dc10f4085b860752b4f3f8399
       
       OUTPUT_FILE=$(mktemp)
       # Run cf push and tee the output to both console and file
-      if [[ -n "${{ inputs.path }}" ]]; then
-        ./cf push -f "${{ inputs.manifest }}" -p "${{ inputs.path }}" --vars-file "vars.yaml" | tee ${OUTPUT_FILE}
+      if [[ -n "${INPUTS_PATH}" ]]; then
+        ./cf push -f "${INPUTS_MANIFEST}" -p "${INPUTS_PATH}" --vars-file "vars.yaml" | tee ${OUTPUT_FILE}
       else
-        ./cf push -f "${{ inputs.manifest }}" --vars-file "vars.yaml" | tee ${OUTPUT_FILE}
+        ./cf push -f "${INPUTS_MANIFEST}" --vars-file "vars.yaml" | tee ${OUTPUT_FILE}
       fi
       
       # Extract the URL from the output and store it in an environment variable
@@ -89,38 +94,61 @@ runs:
       rm ${OUTPUT_FILE}
     env:
       CF_DOCKER_PASSWORD: ${{ inputs.docker_password }}
+      INPUTS_VARS: ${{ inputs.vars }}
+      INPUTS_PATH: ${{ inputs.path }}
+      INPUTS_MANIFEST: ${{ inputs.manifest }}
 
   - name: Run command
     if: inputs.command != ''
     shell: bash
     run: |
       PATH=$PATH:$(pwd)
-      ${{ inputs.command }}
+      ${INPUTS_COMMAND}
     env:
       CF_DOCKER_PASSWORD: ${{ inputs.docker_password }}
+      INPUTS_COMMAND: ${{ inputs.command }}
 
-  - name: Add Success Message 
-    if: github.event_name == 'pull_request' && inputs.manifest != '' && success() && inputs.suppress_comments != 'true'
+  - name: Create or update deployment comment
+    if: github.event_name == 'pull_request' && inputs.manifest != '' && (success() || failure()) && inputs.suppress_comments != 'true'
     uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
     env:
       APP_URL: https://${{ steps.cfdeploy.outputs.cf_app_url }}
+      MANIFEST: ${{ inputs.manifest }}
+      DEPLOYMENT_FAILED: ${{ steps.cfdeploy.outcome == 'failure' || job.status == 'failure' }}
+      RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
     with:
       script: |
-        github.rest.issues.createComment({
-          issue_number: context.issue.number,
+        const marker = `<!-- btp-deploy:${process.env.MANIFEST} -->`;
+        const message = process.env.DEPLOYMENT_FAILED === 'true'
+          ? `🔴 Your PR failed to deploy using manifest \`${process.env.MANIFEST}\`. Please check [this action's run logs](${process.env.RUN_URL}).`
+          : `🟢 Your PR has been deployed using manifest \`${process.env.MANIFEST}\` to [${process.env.APP_URL}](${process.env.APP_URL})`;
+        const body = `${message}\n\n${marker}`;
+
+        const comments = await github.paginate(github.rest.issues.listComments, {
           owner: context.repo.owner,
           repo: context.repo.repo,
-          body: `🟢 Your PR has been deployed to [${process.env.APP_URL}](${process.env.APP_URL})`
-        })
-        
-  - name: Add Failure Message
-    if: github.event_name == 'pull_request' && inputs.manifest != '' && failure() && inputs.suppress_comments != 'true'
-    uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
-    with:
-      script: |
-        github.rest.issues.createComment({
           issue_number: context.issue.number,
-          owner: context.repo.owner,
-          repo: context.repo.repo,
-          body: `🔴 Your PR failed to deploy. Please check the logs.`
-        })
+          per_page: 100
+        });
+        const existing = comments.find((comment) =>
+          comment.user?.type === 'Bot' &&
+          comment.user?.login === 'github-actions[bot]' &&
+          typeof comment.body === 'string' &&
+          comment.body.includes(marker)
+        );
+
+        if (existing) {
+          await github.rest.issues.updateComment({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            comment_id: existing.id,
+            body
+          });
+        } else {
+          await github.rest.issues.createComment({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            issue_number: context.issue.number,
+            body
+          });
+        }
