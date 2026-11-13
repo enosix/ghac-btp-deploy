@@ -33,9 +33,11 @@ jobs:
             6db2a260-106e-4a5a-b612-b1a000f5a374 > CF_PASSWORD
       
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
       
       - name: Test deployment success comment
-        uses: ./
+        uses: $/
         with:
           api: ${{ env.BTP_URL }}
           username: ${{ env.CF_USERNAME }}
@@ -47,7 +49,7 @@ jobs:
       - name: Test deployment failure comment
         if: github.event_name == 'pull_request'
         continue-on-error: true
-        uses: ./
+        uses: $/
         with:
           api: ${{ env.BTP_URL }}
           username: ${{ env.CF_USERNAME }}
@@ -57,7 +59,7 @@ jobs:
           manifest: 'nonexistent-manifest.yml'
           
       - name: Cleanup test deployment for PR
-        uses: ./
+        uses: $/
         with:
           api: ${{ env.BTP_URL }}
           username: ${{ env.CF_USERNAME }}
