@@ -106,11 +106,12 @@ runs:
       APP_URL: https://${{ steps.cfdeploy.outputs.cf_app_url }}
       MANIFEST: ${{ inputs.manifest }}
       DEPLOYMENT_FAILED: ${{ steps.cfdeploy.outcome == 'failure' || job.status == 'failure' }}
+      RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
     with:
       script: |
         const marker = `<!-- btp-deploy:${process.env.MANIFEST} -->`;
         const message = process.env.DEPLOYMENT_FAILED === 'true'
-          ? `🔴 Your PR failed to deploy using manifest \`${process.env.MANIFEST}\`. Please check the logs.`
+          ? `🔴 Your PR failed to deploy using manifest \`${process.env.MANIFEST}\`. Please check the logs: [Actions run logs](${process.env.RUN_URL}).`
           : `🟢 Your PR has been deployed using manifest \`${process.env.MANIFEST}\` to [${process.env.APP_URL}](${process.env.APP_URL})`;
         const body = `${message}\n\n${marker}`;
 
