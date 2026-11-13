@@ -17,7 +17,12 @@ optionally run a specified command.
 - `docker_password`: The Docker password. This is optional.
 - `command`: A command to run after deployment. This is optional.
 - `cli_version`: The cloud foundry CLI version. Default is 'v7'.
-- `suppress_comments`: Set to `'true'` to skip the PR success/failure comment steps. Default is `'false'`.
+- `suppress_comments`: Set to `'true'` to skip the PR deployment comment step. Default is `'false'`.
+
+On pull requests with a manifest, the action creates or updates a `github-actions[bot]` comment with the deployment
+result, using the `manifest` input in a hidden marker (`<!-- btp-deploy:path/to/manifest.yml -->`).
+Runs using the same manifest update the same comment, including failures before an application URL is available.
+The calling workflow needs `pull-requests: write` permission to manage these comments.
 
 ## Usage
 

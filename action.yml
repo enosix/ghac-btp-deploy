@@ -99,28 +99,46 @@ runs:
     env:
       CF_DOCKER_PASSWORD: ${{ inputs.docker_password }}
 
-  - name: Add Success Message 
-    if: github.event_name == 'pull_request' && inputs.manifest != '' && success() && inputs.suppress_comments != 'true'
+  - name: Create or update deployment comment
+    if: github.event_name == 'pull_request' && inputs.manifest != '' && (success() || failure()) && inputs.suppress_comments != 'true'
     uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
     env:
       APP_URL: https://${{ steps.cfdeploy.outputs.cf_app_url }}
+      MANIFEST: ${{ inputs.manifest }}
+      DEPLOYMENT_FAILED: ${{ failure() }}
     with:
       script: |
-        github.rest.issues.createComment({
-          issue_number: context.issue.number,
+        const marker = `<!-- btp-deploy:${process.env.MANIFEST} -->`;
+        const message = process.env.DEPLOYMENT_FAILED === 'true'
+          ? '🔴 Your PR failed to deploy. Please check the logs.'
+          : `🟢 Your PR has been deployed to [${process.env.APP_URL}](${process.env.APP_URL})`;
+        const body = `${message}\n\n${marker}`;
+
+        const comments = await github.paginate(github.rest.issues.listComments, {
           owner: context.repo.owner,
           repo: context.repo.repo,
-          body: `🟢 Your PR has been deployed to [${process.env.APP_URL}](${process.env.APP_URL})`
-        })
-        
-  - name: Add Failure Message
-    if: github.event_name == 'pull_request' && inputs.manifest != '' && failure() && inputs.suppress_comments != 'true'
-    uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
-    with:
-      script: |
-        github.rest.issues.createComment({
           issue_number: context.issue.number,
-          owner: context.repo.owner,
-          repo: context.repo.repo,
-          body: `🔴 Your PR failed to deploy. Please check the logs.`
-        })
+          per_page: 100
+        });
+        const existing = comments.find((comment) =>
+          comment.user?.type === 'Bot' &&
+          comment.user?.login === 'github-actions[bot]' &&
+          typeof comment.body === 'string' &&
+          comment.body.includes(marker)
+        );
+
+        if (existing) {
+          await github.rest.issues.updateComment({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            comment_id: existing.id,
+            body
+          });
+        } else {
+          await github.rest.issues.createComment({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            issue_number: context.issue.number,
+            body
+          });
+        }
