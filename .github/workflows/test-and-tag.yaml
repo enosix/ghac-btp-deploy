@@ -23,6 +23,9 @@ env:
 jobs:
   test-and-tag:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
     steps:
       - name: Get Secrets
         uses: bitwarden/sm-action@1238aae8fc64b212641190a9227c8a734ab1a793 # v3.0.1
@@ -45,6 +48,30 @@ jobs:
           org: ${{ env.CF_ORG }}
           space: ${{ env.CF_SPACE }}
           manifest: 'manifest.yml'
+          command: |
+            expected='https://example.com/r3; scratch.my.salesforce.com; scratch.lightning.force.com'
+            cf set-env ghac-btp-deploy-pr SCRIPT_TEST "$expected"
+            cf env ghac-btp-deploy-pr | grep -F -- "SCRIPT_TEST: $expected"
+            cf unset-env ghac-btp-deploy-pr SCRIPT_TEST
+
+      - name: Test command pipeline failure
+        id: command-failure
+        continue-on-error: true
+        uses: $/
+        with:
+          api: ${{ env.BTP_URL }}
+          username: ${{ env.CF_USERNAME }}
+          password: ${{ env.CF_PASSWORD }}
+          org: ${{ env.CF_ORG }}
+          space: ${{ env.CF_SPACE }}
+          command: |
+            false | true
+            exit 0
+
+      - name: Verify command failure propagation
+        env:
+          COMMAND_OUTCOME: ${{ steps.command-failure.outcome }}
+        run: test "$COMMAND_OUTCOME" = failure
 
       - name: Test deployment failure comment
         if: github.event_name == 'pull_request'
@@ -71,13 +98,15 @@ jobs:
       - name: Create tag
         if: github.event_name != 'pull_request'
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        env:
+          TAG_NAME: ${{ inputs.tag }}
         with:
           script: |
             try {
               await github.rest.git.updateRef({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
-                ref: 'tags/${{ github.event.inputs.tag }}',
+                ref: `tags/${process.env.TAG_NAME}`,
                 sha: context.sha,
               })
             } catch (err) {
@@ -86,7 +115,7 @@ jobs:
               await github.rest.git.createRef({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
-                ref: 'refs/tags/${{ github.event.inputs.tag }}',
+                ref: `refs/tags/${process.env.TAG_NAME}`,
                 sha: context.sha,
               })
             }

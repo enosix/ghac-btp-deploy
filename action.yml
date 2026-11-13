@@ -33,7 +33,7 @@ inputs:
     required: false
     default: ''
   command:
-    description: 'Command to run'
+    description: 'Bash script to run after deployment'
     required: false
     default: ''
   cli_version:
@@ -102,8 +102,8 @@ runs:
     if: inputs.command != ''
     shell: bash
     run: |
-      PATH=$PATH:$(pwd)
-      ${INPUTS_COMMAND}
+      export PATH="$PATH:$(pwd)"
+      bash --noprofile --norc -e -o pipefail -c "$INPUTS_COMMAND"
     env:
       CF_DOCKER_PASSWORD: ${{ inputs.docker_password }}
       INPUTS_COMMAND: ${{ inputs.command }}
